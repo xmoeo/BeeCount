@@ -6386,6 +6386,18 @@ abstract class AppLocalizations {
   /// **'Holidays only'**
   String get recurringTransactionHoliday;
 
+  /// No description provided for @recurringTransactionGenerationTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation Time'**
+  String get recurringTransactionGenerationTime;
+
+  /// No description provided for @recurringTransactionGenerationTimeUnset.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get recurringTransactionGenerationTimeUnset;
+
   /// No description provided for @holidayDataTitle.
   ///
   /// In en, this message translates to:

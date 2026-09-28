@@ -3359,6 +3359,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recurringTransactionHoliday => '仅节假日';
 
   @override
+  String get recurringTransactionGenerationTime => '记账时间';
+
+  @override
+  String get recurringTransactionGenerationTimeUnset => '未设置';
+
+  @override
   String get holidayDataTitle => '节假日数据源';
 
   @override
@@ -11295,6 +11301,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get recurringTransactionHoliday => '僅節假日';
+
+  @override
+  String get recurringTransactionGenerationTime => '記帳時間';
+
+  @override
+  String get recurringTransactionGenerationTimeUnset => '未設置';
 
   @override
   String get holidayDataTitle => '節假日資料來源';

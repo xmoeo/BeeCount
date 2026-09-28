@@ -35,6 +35,7 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
   late DateTime _startDate;
   DateTime? _endDate;
   int? _dayOfMonth;
+  int? _generationMinute; // v34 记账时间(0..1439);null = 未设置,保持默认生成时刻
   Category? _selectedCategory;
   int? _selectedAccountId;
   int? _selectedToAccountId; // 转账的目标账户
@@ -85,6 +86,7 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
       _startDate = widget.recurring!.startDate;
       _endDate = widget.recurring!.endDate;
       _dayOfMonth = widget.recurring!.dayOfMonth;
+      _generationMinute = widget.recurring!.generationMinute;
       _selectedAccountId = widget.recurring!.accountId;
       _selectedToAccountId = widget.recurring!.toAccountId;
       _enabled = widget.recurring!.enabled;
@@ -255,6 +257,10 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
                     allowClear: true,
                     onClear: () => setState(() => _endDate = null),
                   ),
+                  const SizedBox(height: 16),
+
+                  // Generation time (v34:生成交易的时点,未设置保持默认行为)
+                  _buildGenerationTimeField(l10n),
                   const SizedBox(height: 16),
 
                   // Note
@@ -663,6 +669,43 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
     );
   }
 
+  /// v34 记账时间:生成交易的时点(HH:mm)。未设置时保持既有行为
+  /// (按天类=创建时刻,月/年=00:00);设置后"到点才生成"。
+  Widget _buildGenerationTimeField(AppLocalizations l10n) {
+    final valueText = _generationMinute == null
+        ? l10n.recurringTransactionGenerationTimeUnset
+        : '${(_generationMinute! ~/ 60).toString().padLeft(2, '0')}:${(_generationMinute! % 60).toString().padLeft(2, '0')}';
+    return InkWell(
+      onTap: () async {
+        final initial = _generationMinute == null
+            ? TimeOfDay.now()
+            : TimeOfDay(
+                hour: _generationMinute! ~/ 60, minute: _generationMinute! % 60);
+        // 与手动记账一致的滚轮时间选择器(取消/选择时间/确定)
+        final picked = await showWheelTimePicker(
+          context,
+          initial: initial,
+        );
+        if (picked != null) {
+          setState(() => _generationMinute = picked.hour * 60 + picked.minute);
+        }
+      },
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: l10n.recurringTransactionGenerationTime,
+          border: const OutlineInputBorder(),
+          suffixIcon: _generationMinute == null
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () => setState(() => _generationMinute = null),
+                ),
+        ),
+        child: Text(valueText),
+      ),
+    );
+  }
+
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
@@ -859,6 +902,7 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
           endDate: _endDate,
           enabled: _enabled,
           currencyCode: _currencyCode, // null = 账本本位币
+          generationMinute: _generationMinute, // null = 未设置,默认生成时刻
         );
 
         // 如果需要重置最后生成日期，单独更新
@@ -885,6 +929,7 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
           startDate: _startDate,
           endDate: _endDate,
           currencyCode: _currencyCode, // null = 账本本位币
+          generationMinute: _generationMinute, // null = 未设置,默认生成时刻
         );
       }
 

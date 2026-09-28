@@ -171,12 +171,18 @@ class RecurringTransactions extends Table {
   TextColumn get currencyCode => text().nullable()();
 
   // 重复规则
-  TextColumn get frequency => text()(); // daily / weekly / monthly / yearly
+  TextColumn get frequency => text()(); // daily / weekly / monthly / yearly / workday / holiday
   IntColumn get interval =>
       integer().withDefault(const Constant(1))(); // 间隔（每1天、每2周等）
   IntColumn get dayOfMonth => integer().nullable()(); // 月的第几天（1-31）
   IntColumn get dayOfWeek => integer().nullable()(); // 周几（1=周一, 7=周日）
   IntColumn get monthOfYear => integer().nullable()(); // 哪个月（1-12，用于yearly）
+
+  /// v34 记账时间:0..1439(当天第几分钟)。null = 不指定,保持既有生成时刻
+  /// 行为(按天类继承创建时刻,月/年为 00:00)。设置后生成交易的 happenedAt
+  /// = 目标日期 + 该时间,且"到点才算到期"(设 22:00 → 当天 22:00 前打开
+  /// App 不生成当天这笔,补生成的历史日期同样落该时间)。
+  IntColumn get generationMinute => integer().nullable()();
 
   // 时间范围
   DateTimeColumn get startDate => dateTime()();
@@ -511,7 +517,7 @@ class BeeDatabase extends _$BeeDatabase {
   BeeDatabase.forTesting(QueryExecutor executor) : super(executor);
 
   @override
-  int get schemaVersion => 33; // v33: Agent 本地记忆、摘要与审计表
+  int get schemaVersion => 34; // v34: 周期账单记账时间(generation_minute)
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1257,6 +1263,15 @@ class BeeDatabase extends _$BeeDatabase {
             );
             await _createAgentMemoryFtsTable();
             logger.info('DBMigration', 'v33 迁移完成');
+          }
+          if (from < 34) {
+            logger.info('DBMigration', '开始迁移到 v34: 周期账单记账时间(generation_minute)');
+            // 不回填:NULL = 不指定,生成时刻与迁移前行为一字不差。
+            await _addColumnIfMissing(
+                'recurring_transactions',
+                'generation_minute',
+                'ALTER TABLE recurring_transactions ADD COLUMN generation_minute INTEGER;');
+            logger.info('DBMigration', 'v34 迁移完成');
           }
         },
         onCreate: (m) async {

@@ -47,6 +47,7 @@ class LocalRecurringTransactionRepository implements RecurringTransactionReposit
     DateTime? endDate,
     bool enabled = true,
     String? currencyCode,
+    int? generationMinute,
   }) async {
     return await db.into(db.recurringTransactions).insert(
       RecurringTransactionsCompanion.insert(
@@ -66,6 +67,7 @@ class LocalRecurringTransactionRepository implements RecurringTransactionReposit
         endDate: d.Value(endDate),
         enabled: d.Value(enabled),
         currencyCode: d.Value(_normalizeCurrency(currencyCode)),
+        generationMinute: d.Value(generationMinute),
       ),
     );
   }
@@ -97,6 +99,7 @@ class LocalRecurringTransactionRepository implements RecurringTransactionReposit
     bool? enabled,
     DateTime? lastGeneratedDate,
     String? currencyCode,
+    int? generationMinute,
   }) async {
     await (db.update(db.recurringTransactions)..where((t) => t.id.equals(id)))
         .write(
@@ -119,6 +122,8 @@ class LocalRecurringTransactionRepository implements RecurringTransactionReposit
         lastGeneratedDate: d.Value(lastGeneratedDate),
         // null 即写 NULL(改回本位币要能清掉旧外币),与本方法其它字段同语义
         currencyCode: d.Value(_normalizeCurrency(currencyCode)),
+        // null 即写 NULL(清除"记账时间"要能回到默认行为),与 currencyCode 同语义
+        generationMinute: d.Value(generationMinute),
         updatedAt: d.Value(DateTime.now()),
       ),
     );

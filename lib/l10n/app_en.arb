@@ -1433,6 +1433,8 @@
 
   "recurringTransactionWorkday": "Workdays only",
   "recurringTransactionHoliday": "Holidays only",
+  "recurringTransactionGenerationTime": "Generation Time",
+  "recurringTransactionGenerationTimeUnset": "Not set",
   "holidayDataTitle": "Holiday Data Source",
   "holidayDataSubtitle": "Data for workday-only & holiday-only recurring bills",
   "holidayDataPrimaryApi": "Primary API URL",

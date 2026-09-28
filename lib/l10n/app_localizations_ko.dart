@@ -3359,6 +3359,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recurringTransactionHoliday => '휴일만';
 
   @override
+  String get recurringTransactionGenerationTime => '기록 시간';
+
+  @override
+  String get recurringTransactionGenerationTimeUnset => '미설정';
+
+  @override
   String get holidayDataTitle => '휴일 데이터 소스';
 
   @override

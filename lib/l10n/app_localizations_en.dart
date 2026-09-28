@@ -3359,6 +3359,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recurringTransactionHoliday => 'Holidays only';
 
   @override
+  String get recurringTransactionGenerationTime => 'Generation Time';
+
+  @override
+  String get recurringTransactionGenerationTimeUnset => 'Not set';
+
+  @override
   String get holidayDataTitle => 'Holiday Data Source';
 
   @override

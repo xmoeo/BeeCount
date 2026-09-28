@@ -1741,6 +1741,8 @@
 
   "recurringTransactionWorkday": "僅工作日",
   "recurringTransactionHoliday": "僅節假日",
+  "recurringTransactionGenerationTime": "記帳時間",
+  "recurringTransactionGenerationTimeUnset": "未設置",
   "holidayDataTitle": "節假日資料來源",
   "holidayDataSubtitle": "僅工作日/僅節假日週期記帳的判斷資料",
   "holidayDataPrimaryApi": "主 API 位址",

@@ -1339,6 +1339,8 @@
 
   "recurringTransactionWorkday": "仅工作日",
   "recurringTransactionHoliday": "仅节假日",
+  "recurringTransactionGenerationTime": "记账时间",
+  "recurringTransactionGenerationTimeUnset": "未设置",
   "holidayDataTitle": "节假日数据源",
   "holidayDataSubtitle": "仅工作日/仅节假日周期记账的判断数据",
   "holidayDataPrimaryApi": "主 API 地址",

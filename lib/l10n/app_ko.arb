@@ -1022,6 +1022,8 @@
 
   "recurringTransactionWorkday": "평일만",
   "recurringTransactionHoliday": "휴일만",
+  "recurringTransactionGenerationTime": "기록 시간",
+  "recurringTransactionGenerationTimeUnset": "미설정",
   "holidayDataTitle": "휴일 데이터 소스",
   "holidayDataSubtitle": "평일 전용·휴일 전용 반복 기록의 판단 데이터",
   "holidayDataPrimaryApi": "기본 API 주소",

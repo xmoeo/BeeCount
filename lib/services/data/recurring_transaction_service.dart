@@ -133,8 +133,12 @@ class RecurringTransactionService {
         }
 
         nextDate = buildMonthly(baseDate.year, baseDate.month + (firstGen ? 0 : interval));
-        // 首笔:若当月目标日早于基准(本月已过)→ 顺延一个 interval 月,避免回溯
-        if (firstGen && nextDate.isBefore(baseDate)) {
+        // 首笔:若当月目标日早于基准(本月已过)→ 顺延一个 interval 月,避免回溯。
+        // 比较用叠加记账时间后的时刻:创建日 08:00、记账时间 09:00 时,
+        // 当天的 09:00 档还没过去,首笔应落在今天而非顺延到下月。
+        if (firstGen &&
+            _withGenerationTime(nextDate, recurring.generationMinute)
+                .isBefore(baseDate)) {
           nextDate = buildMonthly(baseDate.year, baseDate.month + interval);
         }
         break;
@@ -152,7 +156,10 @@ class RecurringTransactionService {
 
         nextDate = buildYearly(baseDate.year + (firstGen ? 0 : interval));
         // 首笔:若当年目标日早于基准(今年已过)→ 顺延 interval 年
-        if (firstGen && nextDate.isBefore(baseDate)) {
+        // (与 monthly 同理,比较含记账时间)
+        if (firstGen &&
+            _withGenerationTime(nextDate, recurring.generationMinute)
+                .isBefore(baseDate)) {
           nextDate = buildYearly(baseDate.year + interval);
         }
         break;
@@ -180,23 +187,38 @@ class RecurringTransactionService {
         break;
     }
 
-    // 如果下一次日期还没到，返回null(注意:当天 00:00 <= now,故"今天"会通过)
+    // 如果超过结束日期，返回null。
+    // 结束日按"日期部分"比较(记账时间不影响最后一天是否生成)。
+    if (recurring.endDate != null &&
+        DateTime(nextDate.year, nextDate.month, nextDate.day)
+            .isAfter(recurring.endDate!)) {
+      logger.info(_tag,
+          'calc id=${recurring.id} next=$nextDate 超过结束日期 ${recurring.endDate},不生成');
+      return null;
+    }
+
+    // v34 记账时间:显式指定生成时刻(0..1439)时叠加到目标日期,且参与
+    // "是否到期"判断 —— 设 22:00 → 当天 22:00 前打开 App 不生成当天这笔。
+    // 未指定(null)保持既有行为:按天类继承基准时刻,月/年为 00:00。
+    nextDate = _withGenerationTime(nextDate, recurring.generationMinute);
+
+    // 如果下一次日期还没到，返回null(含记账时间:目标时刻 <= now 才生成)
     if (nextDate.isAfter(nowTs)) {
       logger.info(_tag,
           'calc id=${recurring.id} freq=${frequency.value} interval=$interval firstGen=$firstGen base=$baseDate → next=$nextDate 尚未到期(>now=$nowTs),本次不生成');
       return null;
     }
 
-    // 如果超过结束日期，返回null
-    if (recurring.endDate != null && nextDate.isAfter(recurring.endDate!)) {
-      logger.info(_tag,
-          'calc id=${recurring.id} next=$nextDate 超过结束日期 ${recurring.endDate},不生成');
-      return null;
-    }
-
     logger.info(_tag,
         'calc id=${recurring.id} freq=${frequency.value} interval=$interval firstGen=$firstGen base=$baseDate lastGen=$lastGenerated → 生成 next=$nextDate');
     return nextDate;
+  }
+
+  /// v34:把"记账时间"叠加到目标日期上(null = 不指定,原样返回)。
+  static DateTime _withGenerationTime(DateTime date, int? generationMinute) {
+    if (generationMinute == null) return date;
+    return DateTime(date.year, date.month, date.day, generationMinute ~/ 60,
+        generationMinute % 60);
   }
 
   /// 生成待处理的交易记录

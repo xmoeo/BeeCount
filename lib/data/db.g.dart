@@ -3011,6 +3011,12 @@ class $RecurringTransactionsTable extends RecurringTransactions
   late final GeneratedColumn<int> monthOfYear = GeneratedColumn<int>(
       'month_of_year', aliasedName, true,
       type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _generationMinuteMeta =
+      const VerificationMeta('generationMinute');
+  @override
+  late final GeneratedColumn<int> generationMinute = GeneratedColumn<int>(
+      'generation_minute', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _startDateMeta =
       const VerificationMeta('startDate');
   @override
@@ -3071,6 +3077,7 @@ class $RecurringTransactionsTable extends RecurringTransactions
         dayOfMonth,
         dayOfWeek,
         monthOfYear,
+        generationMinute,
         startDate,
         endDate,
         lastGeneratedDate,
@@ -3164,6 +3171,12 @@ class $RecurringTransactionsTable extends RecurringTransactions
           monthOfYear.isAcceptableOrUnknown(
               data['month_of_year']!, _monthOfYearMeta));
     }
+    if (data.containsKey('generation_minute')) {
+      context.handle(
+          _generationMinuteMeta,
+          generationMinute.isAcceptableOrUnknown(
+              data['generation_minute']!, _generationMinuteMeta));
+    }
     if (data.containsKey('start_date')) {
       context.handle(_startDateMeta,
           startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta));
@@ -3229,6 +3242,8 @@ class $RecurringTransactionsTable extends RecurringTransactions
           .read(DriftSqlType.int, data['${effectivePrefix}day_of_week']),
       monthOfYear: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}month_of_year']),
+      generationMinute: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}generation_minute']),
       startDate: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}start_date'])!,
       endDate: attachedDatabase.typeMapping
@@ -3270,6 +3285,12 @@ class RecurringTransaction extends DataClass
   final int? dayOfMonth;
   final int? dayOfWeek;
   final int? monthOfYear;
+
+  /// v34 记账时间:0..1439(当天第几分钟)。null = 不指定,保持既有生成时刻
+  /// 行为(按天类继承创建时刻,月/年为 00:00)。设置后生成交易的 happenedAt
+  /// = 目标日期 + 该时间,且"到点才算到期"(设 22:00 → 当天 22:00 前打开
+  /// App 不生成当天这笔,补生成的历史日期同样落该时间)。
+  final int? generationMinute;
   final DateTime startDate;
   final DateTime? endDate;
   final DateTime? lastGeneratedDate;
@@ -3291,6 +3312,7 @@ class RecurringTransaction extends DataClass
       this.dayOfMonth,
       this.dayOfWeek,
       this.monthOfYear,
+      this.generationMinute,
       required this.startDate,
       this.endDate,
       this.lastGeneratedDate,
@@ -3329,6 +3351,9 @@ class RecurringTransaction extends DataClass
     }
     if (!nullToAbsent || monthOfYear != null) {
       map['month_of_year'] = Variable<int>(monthOfYear);
+    }
+    if (!nullToAbsent || generationMinute != null) {
+      map['generation_minute'] = Variable<int>(generationMinute);
     }
     map['start_date'] = Variable<DateTime>(startDate);
     if (!nullToAbsent || endDate != null) {
@@ -3373,6 +3398,9 @@ class RecurringTransaction extends DataClass
       monthOfYear: monthOfYear == null && nullToAbsent
           ? const Value.absent()
           : Value(monthOfYear),
+      generationMinute: generationMinute == null && nullToAbsent
+          ? const Value.absent()
+          : Value(generationMinute),
       startDate: Value(startDate),
       endDate: endDate == null && nullToAbsent
           ? const Value.absent()
@@ -3404,6 +3432,7 @@ class RecurringTransaction extends DataClass
       dayOfMonth: serializer.fromJson<int?>(json['dayOfMonth']),
       dayOfWeek: serializer.fromJson<int?>(json['dayOfWeek']),
       monthOfYear: serializer.fromJson<int?>(json['monthOfYear']),
+      generationMinute: serializer.fromJson<int?>(json['generationMinute']),
       startDate: serializer.fromJson<DateTime>(json['startDate']),
       endDate: serializer.fromJson<DateTime?>(json['endDate']),
       lastGeneratedDate:
@@ -3431,6 +3460,7 @@ class RecurringTransaction extends DataClass
       'dayOfMonth': serializer.toJson<int?>(dayOfMonth),
       'dayOfWeek': serializer.toJson<int?>(dayOfWeek),
       'monthOfYear': serializer.toJson<int?>(monthOfYear),
+      'generationMinute': serializer.toJson<int?>(generationMinute),
       'startDate': serializer.toJson<DateTime>(startDate),
       'endDate': serializer.toJson<DateTime?>(endDate),
       'lastGeneratedDate': serializer.toJson<DateTime?>(lastGeneratedDate),
@@ -3455,6 +3485,7 @@ class RecurringTransaction extends DataClass
           Value<int?> dayOfMonth = const Value.absent(),
           Value<int?> dayOfWeek = const Value.absent(),
           Value<int?> monthOfYear = const Value.absent(),
+          Value<int?> generationMinute = const Value.absent(),
           DateTime? startDate,
           Value<DateTime?> endDate = const Value.absent(),
           Value<DateTime?> lastGeneratedDate = const Value.absent(),
@@ -3477,6 +3508,9 @@ class RecurringTransaction extends DataClass
         dayOfMonth: dayOfMonth.present ? dayOfMonth.value : this.dayOfMonth,
         dayOfWeek: dayOfWeek.present ? dayOfWeek.value : this.dayOfWeek,
         monthOfYear: monthOfYear.present ? monthOfYear.value : this.monthOfYear,
+        generationMinute: generationMinute.present
+            ? generationMinute.value
+            : this.generationMinute,
         startDate: startDate ?? this.startDate,
         endDate: endDate.present ? endDate.value : this.endDate,
         lastGeneratedDate: lastGeneratedDate.present
@@ -3508,6 +3542,9 @@ class RecurringTransaction extends DataClass
       dayOfWeek: data.dayOfWeek.present ? data.dayOfWeek.value : this.dayOfWeek,
       monthOfYear:
           data.monthOfYear.present ? data.monthOfYear.value : this.monthOfYear,
+      generationMinute: data.generationMinute.present
+          ? data.generationMinute.value
+          : this.generationMinute,
       startDate: data.startDate.present ? data.startDate.value : this.startDate,
       endDate: data.endDate.present ? data.endDate.value : this.endDate,
       lastGeneratedDate: data.lastGeneratedDate.present
@@ -3536,6 +3573,7 @@ class RecurringTransaction extends DataClass
           ..write('dayOfMonth: $dayOfMonth, ')
           ..write('dayOfWeek: $dayOfWeek, ')
           ..write('monthOfYear: $monthOfYear, ')
+          ..write('generationMinute: $generationMinute, ')
           ..write('startDate: $startDate, ')
           ..write('endDate: $endDate, ')
           ..write('lastGeneratedDate: $lastGeneratedDate, ')
@@ -3547,27 +3585,29 @@ class RecurringTransaction extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
-      id,
-      ledgerId,
-      type,
-      amount,
-      categoryId,
-      accountId,
-      toAccountId,
-      note,
-      currencyCode,
-      frequency,
-      interval,
-      dayOfMonth,
-      dayOfWeek,
-      monthOfYear,
-      startDate,
-      endDate,
-      lastGeneratedDate,
-      enabled,
-      createdAt,
-      updatedAt);
+  int get hashCode => Object.hashAll([
+        id,
+        ledgerId,
+        type,
+        amount,
+        categoryId,
+        accountId,
+        toAccountId,
+        note,
+        currencyCode,
+        frequency,
+        interval,
+        dayOfMonth,
+        dayOfWeek,
+        monthOfYear,
+        generationMinute,
+        startDate,
+        endDate,
+        lastGeneratedDate,
+        enabled,
+        createdAt,
+        updatedAt
+      ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3586,6 +3626,7 @@ class RecurringTransaction extends DataClass
           other.dayOfMonth == this.dayOfMonth &&
           other.dayOfWeek == this.dayOfWeek &&
           other.monthOfYear == this.monthOfYear &&
+          other.generationMinute == this.generationMinute &&
           other.startDate == this.startDate &&
           other.endDate == this.endDate &&
           other.lastGeneratedDate == this.lastGeneratedDate &&
@@ -3610,6 +3651,7 @@ class RecurringTransactionsCompanion
   final Value<int?> dayOfMonth;
   final Value<int?> dayOfWeek;
   final Value<int?> monthOfYear;
+  final Value<int?> generationMinute;
   final Value<DateTime> startDate;
   final Value<DateTime?> endDate;
   final Value<DateTime?> lastGeneratedDate;
@@ -3631,6 +3673,7 @@ class RecurringTransactionsCompanion
     this.dayOfMonth = const Value.absent(),
     this.dayOfWeek = const Value.absent(),
     this.monthOfYear = const Value.absent(),
+    this.generationMinute = const Value.absent(),
     this.startDate = const Value.absent(),
     this.endDate = const Value.absent(),
     this.lastGeneratedDate = const Value.absent(),
@@ -3653,6 +3696,7 @@ class RecurringTransactionsCompanion
     this.dayOfMonth = const Value.absent(),
     this.dayOfWeek = const Value.absent(),
     this.monthOfYear = const Value.absent(),
+    this.generationMinute = const Value.absent(),
     required DateTime startDate,
     this.endDate = const Value.absent(),
     this.lastGeneratedDate = const Value.absent(),
@@ -3679,6 +3723,7 @@ class RecurringTransactionsCompanion
     Expression<int>? dayOfMonth,
     Expression<int>? dayOfWeek,
     Expression<int>? monthOfYear,
+    Expression<int>? generationMinute,
     Expression<DateTime>? startDate,
     Expression<DateTime>? endDate,
     Expression<DateTime>? lastGeneratedDate,
@@ -3701,6 +3746,7 @@ class RecurringTransactionsCompanion
       if (dayOfMonth != null) 'day_of_month': dayOfMonth,
       if (dayOfWeek != null) 'day_of_week': dayOfWeek,
       if (monthOfYear != null) 'month_of_year': monthOfYear,
+      if (generationMinute != null) 'generation_minute': generationMinute,
       if (startDate != null) 'start_date': startDate,
       if (endDate != null) 'end_date': endDate,
       if (lastGeneratedDate != null) 'last_generated_date': lastGeneratedDate,
@@ -3725,6 +3771,7 @@ class RecurringTransactionsCompanion
       Value<int?>? dayOfMonth,
       Value<int?>? dayOfWeek,
       Value<int?>? monthOfYear,
+      Value<int?>? generationMinute,
       Value<DateTime>? startDate,
       Value<DateTime?>? endDate,
       Value<DateTime?>? lastGeneratedDate,
@@ -3746,6 +3793,7 @@ class RecurringTransactionsCompanion
       dayOfMonth: dayOfMonth ?? this.dayOfMonth,
       dayOfWeek: dayOfWeek ?? this.dayOfWeek,
       monthOfYear: monthOfYear ?? this.monthOfYear,
+      generationMinute: generationMinute ?? this.generationMinute,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       lastGeneratedDate: lastGeneratedDate ?? this.lastGeneratedDate,
@@ -3800,6 +3848,9 @@ class RecurringTransactionsCompanion
     if (monthOfYear.present) {
       map['month_of_year'] = Variable<int>(monthOfYear.value);
     }
+    if (generationMinute.present) {
+      map['generation_minute'] = Variable<int>(generationMinute.value);
+    }
     if (startDate.present) {
       map['start_date'] = Variable<DateTime>(startDate.value);
     }
@@ -3838,6 +3889,7 @@ class RecurringTransactionsCompanion
           ..write('dayOfMonth: $dayOfMonth, ')
           ..write('dayOfWeek: $dayOfWeek, ')
           ..write('monthOfYear: $monthOfYear, ')
+          ..write('generationMinute: $generationMinute, ')
           ..write('startDate: $startDate, ')
           ..write('endDate: $endDate, ')
           ..write('lastGeneratedDate: $lastGeneratedDate, ')
@@ -13830,6 +13882,7 @@ typedef $$RecurringTransactionsTableCreateCompanionBuilder
   Value<int?> dayOfMonth,
   Value<int?> dayOfWeek,
   Value<int?> monthOfYear,
+  Value<int?> generationMinute,
   required DateTime startDate,
   Value<DateTime?> endDate,
   Value<DateTime?> lastGeneratedDate,
@@ -13853,6 +13906,7 @@ typedef $$RecurringTransactionsTableUpdateCompanionBuilder
   Value<int?> dayOfMonth,
   Value<int?> dayOfWeek,
   Value<int?> monthOfYear,
+  Value<int?> generationMinute,
   Value<DateTime> startDate,
   Value<DateTime?> endDate,
   Value<DateTime?> lastGeneratedDate,
@@ -13911,6 +13965,10 @@ class $$RecurringTransactionsTableFilterComposer
 
   ColumnFilters<int> get monthOfYear => $composableBuilder(
       column: $table.monthOfYear, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get generationMinute => $composableBuilder(
+      column: $table.generationMinute,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get startDate => $composableBuilder(
       column: $table.startDate, builder: (column) => ColumnFilters(column));
@@ -13984,6 +14042,10 @@ class $$RecurringTransactionsTableOrderingComposer
   ColumnOrderings<int> get monthOfYear => $composableBuilder(
       column: $table.monthOfYear, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get generationMinute => $composableBuilder(
+      column: $table.generationMinute,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get startDate => $composableBuilder(
       column: $table.startDate, builder: (column) => ColumnOrderings(column));
 
@@ -14055,6 +14117,9 @@ class $$RecurringTransactionsTableAnnotationComposer
   GeneratedColumn<int> get monthOfYear => $composableBuilder(
       column: $table.monthOfYear, builder: (column) => column);
 
+  GeneratedColumn<int> get generationMinute => $composableBuilder(
+      column: $table.generationMinute, builder: (column) => column);
+
   GeneratedColumn<DateTime> get startDate =>
       $composableBuilder(column: $table.startDate, builder: (column) => column);
 
@@ -14119,6 +14184,7 @@ class $$RecurringTransactionsTableTableManager extends RootTableManager<
             Value<int?> dayOfMonth = const Value.absent(),
             Value<int?> dayOfWeek = const Value.absent(),
             Value<int?> monthOfYear = const Value.absent(),
+            Value<int?> generationMinute = const Value.absent(),
             Value<DateTime> startDate = const Value.absent(),
             Value<DateTime?> endDate = const Value.absent(),
             Value<DateTime?> lastGeneratedDate = const Value.absent(),
@@ -14141,6 +14207,7 @@ class $$RecurringTransactionsTableTableManager extends RootTableManager<
             dayOfMonth: dayOfMonth,
             dayOfWeek: dayOfWeek,
             monthOfYear: monthOfYear,
+            generationMinute: generationMinute,
             startDate: startDate,
             endDate: endDate,
             lastGeneratedDate: lastGeneratedDate,
@@ -14163,6 +14230,7 @@ class $$RecurringTransactionsTableTableManager extends RootTableManager<
             Value<int?> dayOfMonth = const Value.absent(),
             Value<int?> dayOfWeek = const Value.absent(),
             Value<int?> monthOfYear = const Value.absent(),
+            Value<int?> generationMinute = const Value.absent(),
             required DateTime startDate,
             Value<DateTime?> endDate = const Value.absent(),
             Value<DateTime?> lastGeneratedDate = const Value.absent(),
@@ -14185,6 +14253,7 @@ class $$RecurringTransactionsTableTableManager extends RootTableManager<
             dayOfMonth: dayOfMonth,
             dayOfWeek: dayOfWeek,
             monthOfYear: monthOfYear,
+            generationMinute: generationMinute,
             startDate: startDate,
             endDate: endDate,
             lastGeneratedDate: lastGeneratedDate,
