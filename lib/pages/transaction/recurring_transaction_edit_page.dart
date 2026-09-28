@@ -51,6 +51,30 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
 
   bool get _isEditing => widget.recurring != null;
 
+  /// 与 daily 同为"按天推进"的频率:不展示间隔选择(固定每 1 天),
+  /// 仅工作日/仅节假日靠节假日数据决定当天是否生成。
+  bool get _isDailyLike =>
+      _frequency == RecurringFrequency.daily ||
+      _frequency == RecurringFrequency.workday ||
+      _frequency == RecurringFrequency.holiday;
+
+  String _frequencyLabel(AppLocalizations l10n, RecurringFrequency frequency) {
+    switch (frequency) {
+      case RecurringFrequency.daily:
+        return l10n.recurringTransactionDaily;
+      case RecurringFrequency.weekly:
+        return l10n.recurringTransactionWeekly;
+      case RecurringFrequency.monthly:
+        return l10n.recurringTransactionMonthly;
+      case RecurringFrequency.yearly:
+        return l10n.recurringTransactionYearly;
+      case RecurringFrequency.workday:
+        return l10n.recurringTransactionWorkday;
+      case RecurringFrequency.holiday:
+        return l10n.recurringTransactionHoliday;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -205,11 +229,9 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
                   _buildFrequencySelector(l10n),
                   const SizedBox(height: 16),
 
-                  // Interval
-                  if (_frequency != RecurringFrequency.daily)
-                    _buildIntervalSelector(l10n),
-                  if (_frequency != RecurringFrequency.daily)
-                    const SizedBox(height: 16),
+                  // Interval(仅工作日/仅节假日与每天一样固定每 1 天,不展示)
+                  if (!_isDailyLike) _buildIntervalSelector(l10n),
+                  if (!_isDailyLike) const SizedBox(height: 16),
 
                   // Day of month (for monthly)
                   if (_frequency == RecurringFrequency.monthly)
@@ -478,21 +500,7 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
   }
 
   Widget _buildFrequencySelector(AppLocalizations l10n) {
-    String frequencyLabel;
-    switch (_frequency) {
-      case RecurringFrequency.daily:
-        frequencyLabel = l10n.recurringTransactionDaily;
-        break;
-      case RecurringFrequency.weekly:
-        frequencyLabel = l10n.recurringTransactionWeekly;
-        break;
-      case RecurringFrequency.monthly:
-        frequencyLabel = l10n.recurringTransactionMonthly;
-        break;
-      case RecurringFrequency.yearly:
-        frequencyLabel = l10n.recurringTransactionYearly;
-        break;
-    }
+    final frequencyLabel = _frequencyLabel(l10n, _frequency);
 
     return InkWell(
       onTap: () async {
@@ -500,25 +508,14 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
           context,
           initial: _frequency,
           items: RecurringFrequency.values,
-          labelBuilder: (freq) {
-            switch (freq) {
-              case RecurringFrequency.daily:
-                return l10n.recurringTransactionDaily;
-              case RecurringFrequency.weekly:
-                return l10n.recurringTransactionWeekly;
-              case RecurringFrequency.monthly:
-                return l10n.recurringTransactionMonthly;
-              case RecurringFrequency.yearly:
-                return l10n.recurringTransactionYearly;
-            }
-          },
+          labelBuilder: (freq) => _frequencyLabel(l10n, freq),
           title: l10n.recurringTransactionFrequency,
         );
 
         if (result != null) {
           setState(() {
             _frequency = result;
-            if (_frequency == RecurringFrequency.daily) {
+            if (_isDailyLike) {
               _interval = 1;
             }
           });
@@ -544,6 +541,8 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
     String intervalLabel;
     switch (_frequency) {
       case RecurringFrequency.daily:
+      case RecurringFrequency.workday:
+      case RecurringFrequency.holiday:
         intervalLabel = l10n.recurringTransactionEveryNDays(_interval);
         break;
       case RecurringFrequency.weekly:
@@ -566,6 +565,8 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
           labelBuilder: (i) {
             switch (_frequency) {
               case RecurringFrequency.daily:
+              case RecurringFrequency.workday:
+              case RecurringFrequency.holiday:
                 return l10n.recurringTransactionEveryNDays(i);
               case RecurringFrequency.weekly:
                 return l10n.recurringTransactionEveryNWeeks(i);

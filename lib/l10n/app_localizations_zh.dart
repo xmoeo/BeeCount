@@ -3353,6 +3353,79 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recurringTransactionYearly => '每年';
 
   @override
+  String get recurringTransactionWorkday => '仅工作日';
+
+  @override
+  String get recurringTransactionHoliday => '仅节假日';
+
+  @override
+  String get holidayDataTitle => '节假日数据源';
+
+  @override
+  String get holidayDataSubtitle => '仅工作日/仅节假日周期记账的判断数据';
+
+  @override
+  String get holidayDataPrimaryApi => '主 API 地址';
+
+  @override
+  String get holidayDataBackupApis => '备用 API 列表';
+
+  @override
+  String holidayDataBackupApiLabel(int n) {
+    return '备用 API $n';
+  }
+
+  @override
+  String get holidayDataAddBackup => '添加备用 API';
+
+  @override
+  String holidayDataUrlHint(String token) {
+    return 'URL 中的 $token 会被替换为对应年份；所有数据源失败时按简单周末规则判断。';
+  }
+
+  @override
+  String get holidayDataTestConnection => '测试连接';
+
+  @override
+  String holidayDataTestOk(int n) {
+    return '测试成功，解析到 $n 条数据';
+  }
+
+  @override
+  String get holidayDataTestFail => '测试失败：无法获取或解析数据';
+
+  @override
+  String get holidayDataRestoreDefaults => '恢复默认配置';
+
+  @override
+  String get holidayDataRefreshNow => '立即刷新当年数据';
+
+  @override
+  String holidayDataLastUpdated(String dt) {
+    return '上次更新：$dt';
+  }
+
+  @override
+  String get holidayDataCacheEmpty => '暂无缓存数据';
+
+  @override
+  String get holidayDataRefreshOk => '刷新成功';
+
+  @override
+  String get holidayDataRefreshFail => '刷新失败';
+
+  @override
+  String get holidayDataSaved => '已保存';
+
+  @override
+  String holidayDataInvalidUrl(String token) {
+    return 'API 地址无效（需为 http(s) 链接且包含 $token）';
+  }
+
+  @override
+  String get holidayDataRestored => '已恢复默认配置';
+
+  @override
   String get recurringTransactionInterval => '间隔';
 
   @override
@@ -11216,6 +11289,79 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get recurringTransactionYearly => '每年';
+
+  @override
+  String get recurringTransactionWorkday => '僅工作日';
+
+  @override
+  String get recurringTransactionHoliday => '僅節假日';
+
+  @override
+  String get holidayDataTitle => '節假日資料來源';
+
+  @override
+  String get holidayDataSubtitle => '僅工作日/僅節假日週期記帳的判斷資料';
+
+  @override
+  String get holidayDataPrimaryApi => '主 API 位址';
+
+  @override
+  String get holidayDataBackupApis => '備用 API 列表';
+
+  @override
+  String holidayDataBackupApiLabel(int n) {
+    return '備用 API $n';
+  }
+
+  @override
+  String get holidayDataAddBackup => '新增備用 API';
+
+  @override
+  String holidayDataUrlHint(String token) {
+    return 'URL 中的 $token 會被替換為對應年份；所有資料來源失敗時按簡單週末規則判斷。';
+  }
+
+  @override
+  String get holidayDataTestConnection => '測試連線';
+
+  @override
+  String holidayDataTestOk(int n) {
+    return '測試成功，解析到 $n 筆資料';
+  }
+
+  @override
+  String get holidayDataTestFail => '測試失敗：無法取得或解析資料';
+
+  @override
+  String get holidayDataRestoreDefaults => '還原預設配置';
+
+  @override
+  String get holidayDataRefreshNow => '立即重新整理當年資料';
+
+  @override
+  String holidayDataLastUpdated(String dt) {
+    return '上次更新：$dt';
+  }
+
+  @override
+  String get holidayDataCacheEmpty => '尚無快取資料';
+
+  @override
+  String get holidayDataRefreshOk => '重新整理成功';
+
+  @override
+  String get holidayDataRefreshFail => '重新整理失敗';
+
+  @override
+  String get holidayDataSaved => '已儲存';
+
+  @override
+  String holidayDataInvalidUrl(String token) {
+    return 'API 位址無效（需為 http(s) 連結且包含 $token）';
+  }
+
+  @override
+  String get holidayDataRestored => '已還原預設配置';
 
   @override
   String get recurringTransactionInterval => '間隔';

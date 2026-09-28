@@ -14,6 +14,7 @@ import 'smart_billing_providers.dart';
 import '../data/db.dart';
 import '../utils/month_range.dart';
 import '../services/data/recurring_transaction_service.dart';
+import '../services/holiday/holiday_service.dart';
 import '../services/billing/post_processor.dart';
 import '../services/system/logger_service.dart';
 import '../ai/providers/ai_constants.dart';
@@ -323,6 +324,17 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
       final start = DateTime.now();
       await ref.read(countsForLedgerProvider(ledgerId).future);
       logger.info(tag, '账本统计(异步): ${DateTime.now().difference(start).inMilliseconds}ms');
+    });
+
+    // 预拉节假日数据("仅工作日/仅节假日"周期判断用):有缓存则零请求,
+    // 缺失才走网络;失败只降级为周末判断,不阻塞启动流程。
+    Future(() async {
+      try {
+        await HolidayService.instance.ensureCurrentYearData();
+        await HolidayService.instance.ensureNextYearDataIfNeeded();
+      } catch (e) {
+        logger.warning('Holiday', '启动预拉节假日数据失败: $e');
+      }
     });
 
     // 生成待处理的周期交易

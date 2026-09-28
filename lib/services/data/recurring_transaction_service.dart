@@ -1,4 +1,5 @@
 import '../../data/db.dart';
+import '../holiday/holiday_service.dart';
 import '../system/logger_service.dart';
 
 /// 重复交易频率枚举
@@ -6,7 +7,9 @@ enum RecurringFrequency {
   daily('daily'),      // 每天
   weekly('weekly'),    // 每周
   monthly('monthly'),  // 每月
-  yearly('yearly');    // 每年
+  yearly('yearly'),    // 每年
+  workday('workday'),  // 仅工作日:周末/法定节假日跳过,不顺延
+  holiday('holiday');  // 仅节假日:周末+法定节假日执行,调休上班日跳过
 
   final String value;
   const RecurringFrequency(this.value);
@@ -17,6 +20,11 @@ enum RecurringFrequency {
       orElse: () => RecurringFrequency.monthly,
     );
   }
+
+  /// 该频率是否依赖节假日数据(需要提前加载当年数据)。
+  static bool needsHolidayData(String value) =>
+      value == RecurringFrequency.workday.value ||
+      value == RecurringFrequency.holiday.value;
 }
 
 /// 重复交易服务
@@ -148,6 +156,28 @@ class RecurringTransactionService {
           nextDate = buildYearly(baseDate.year + interval);
         }
         break;
+
+      case RecurringFrequency.workday:
+      case RecurringFrequency.holiday:
+        // 仅工作日/仅节假日:推进节奏与 daily 相同,但候选日必须通过
+        // 工作日/节假日判断才生成;未通过的候选日直接跳过 —— 不生成、
+        // 不顺延、lastGeneratedDate 不推进。数据缺失时 HolidayService
+        // 自动降级为"周一至周五为工作日"的简单周末判断。
+        final wantWorkday = frequency == RecurringFrequency.workday;
+        var candidate =
+            firstGen ? baseDate : baseDate.add(Duration(days: interval));
+        var skipped = 0;
+        while (!HolidayService.instance.qualifies(candidate, wantWorkday)) {
+          if (++skipped > 1000) {
+            logger.warning(_tag,
+                'calc id=${recurring.id} 连续跳过超过 1000 个候选日,强制中止以防死循环');
+            return null;
+          }
+          candidate = candidate.add(Duration(days: interval));
+          if (candidate.isAfter(nowTs)) break; // 推进到未来仍未命中 → 本次不生成
+        }
+        nextDate = candidate;
+        break;
     }
 
     // 如果下一次日期还没到，返回null(注意:当天 00:00 <= now,故"今天"会通过)
@@ -173,6 +203,22 @@ class RecurringTransactionService {
   Future<List<Transaction>> generatePendingTransactions() async {
     final nowStr = DateTime.now().toString();
     logger.info(_tag, '开始扫描周期交易 (now=$nowStr)');
+
+    // 仅工作日/仅节假日的周期依赖节假日数据:先确保当年数据已加载
+    // (缓存优先,缺失才走网络;整条回退链限时,超时/失败降级为周末判断,
+    // 拉取仍在后台继续,写好缓存后下次扫描生效)。
+    try {
+      final allRecurring = await repository.getAllRecurringTransactions();
+      if (allRecurring.any(
+          (r) => r.enabled && RecurringFrequency.needsHolidayData(r.frequency))) {
+        final loaded = await HolidayService.instance
+            .ensureYearLoaded(DateTime.now().year)
+            .timeout(HolidayService.fetchTimeoutBudget, onTimeout: () => false);
+        logger.info(_tag, '节假日数据就绪: $loaded(超时/失败将按周末判断)');
+      }
+    } catch (e) {
+      logger.warning(_tag, '加载节假日数据失败,工作日/节假日判断降级为周末判断: $e');
+    }
 
     final ledgers = await repository.getAllLedgers();
     logger.info(_tag, '获取到 ${ledgers.length} 个账本');

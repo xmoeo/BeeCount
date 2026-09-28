@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +10,7 @@ import '../../widgets/biz/section_card.dart';
 import '../../data/db.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/data/recurring_transaction_service.dart';
+import '../../services/holiday/holiday_service.dart';
 import '../../utils/category_utils.dart';
 import '../../styles/tokens.dart';
 import 'recurring_transaction_edit_page.dart';
@@ -126,6 +129,12 @@ class _RecurringTransactionCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.watch(repositoryProvider);
     final primaryColor = ref.watch(primaryColorProvider);
+
+    // 仅工作日/仅节假日的"下次生成"展示依赖节假日数据,顺手预热
+    // (有内存/缓存时零开销,缺失时后台拉取,不阻塞 UI)。
+    if (RecurringFrequency.needsHolidayData(recurring.frequency)) {
+      unawaited(HolidayService.instance.ensureCurrentYearData());
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -389,6 +398,10 @@ class _RecurringTransactionCard extends ConsumerWidget {
           return l10n.recurringTransactionMonthly;
         case RecurringFrequency.yearly:
           return l10n.recurringTransactionYearly;
+        case RecurringFrequency.workday:
+          return l10n.recurringTransactionWorkday;
+        case RecurringFrequency.holiday:
+          return l10n.recurringTransactionHoliday;
       }
     } else {
       switch (frequency) {
@@ -400,6 +413,10 @@ class _RecurringTransactionCard extends ConsumerWidget {
           return l10n.recurringTransactionEveryNMonths(interval);
         case RecurringFrequency.yearly:
           return l10n.recurringTransactionEveryNYears(interval);
+        case RecurringFrequency.workday:
+        case RecurringFrequency.holiday:
+          // 与每天同为按天节奏,仅工作日/节假日判断不同
+          return l10n.recurringTransactionEveryNDays(interval);
       }
     }
   }

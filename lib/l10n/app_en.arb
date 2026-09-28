@@ -1430,6 +1430,63 @@
   "recurringTransactionWeekly": "Weekly",
   "recurringTransactionMonthly": "Monthly",
   "recurringTransactionYearly": "Yearly",
+
+  "recurringTransactionWorkday": "Workdays only",
+  "recurringTransactionHoliday": "Holidays only",
+  "holidayDataTitle": "Holiday Data Source",
+  "holidayDataSubtitle": "Data for workday-only & holiday-only recurring bills",
+  "holidayDataPrimaryApi": "Primary API URL",
+  "holidayDataBackupApis": "Backup API list",
+  "holidayDataBackupApiLabel": "Backup API {n}",
+  "@holidayDataBackupApiLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "holidayDataAddBackup": "Add backup API",
+  "holidayDataUrlHint": "The {token} placeholder in the URL is replaced with the target year. If all sources fail, a simple weekend rule is used.",
+  "@holidayDataUrlHint": {
+    "placeholders": {
+      "token": {
+        "type": "String"
+      }
+    }
+  },
+  "holidayDataTestConnection": "Test connection",
+  "holidayDataTestOk": "Test passed, {n} entries parsed",
+  "@holidayDataTestOk": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "holidayDataTestFail": "Test failed: unable to fetch or parse data",
+  "holidayDataRestoreDefaults": "Restore defaults",
+  "holidayDataRefreshNow": "Refresh current year data",
+  "holidayDataLastUpdated": "Last updated: {dt}",
+  "@holidayDataLastUpdated": {
+    "placeholders": {
+      "dt": {
+        "type": "String"
+      }
+    }
+  },
+  "holidayDataCacheEmpty": "No cached data",
+  "holidayDataRefreshOk": "Refreshed",
+  "holidayDataRefreshFail": "Refresh failed",
+  "holidayDataSaved": "Saved",
+  "holidayDataInvalidUrl": "Invalid API URL (must be http(s) and contain {token})",
+  "@holidayDataInvalidUrl": {
+    "placeholders": {
+      "token": {
+        "type": "String"
+      }
+    }
+  },
+  "holidayDataRestored": "Restored to defaults",
   "recurringTransactionInterval": "Interval",
   "recurringTransactionDayOfMonth": "Day of Month",
   "recurringTransactionStartDate": "Start Date",

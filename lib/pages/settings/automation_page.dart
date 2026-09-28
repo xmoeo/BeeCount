@@ -6,6 +6,7 @@ import '../../widgets/biz/biz.dart';
 import '../../styles/tokens.dart';
 import '../transaction/recurring_transaction_page.dart';
 import '../settings/reminder_settings_page.dart';
+import '../settings/holiday_data_settings_page.dart';
 import '../../l10n/app_localizations.dart';
 import '../../utils/ui_scale_extensions.dart';
 
@@ -40,6 +41,19 @@ class AutomationPage extends ConsumerWidget {
                         onTap: () async {
                           await Navigator.of(context).push(
                             MaterialPageRoute(builder: (_) => const RecurringTransactionPage()),
+                          );
+                        },
+                      ),
+                      BeeTokens.cardDivider(context),
+                      // 节假日数据源(仅工作日/仅节假日周期判断用)
+                      AppListTile(
+                        leading: Icons.event_available,
+                        title: AppLocalizations.of(context).holidayDataTitle,
+                        subtitle: AppLocalizations.of(context).holidayDataSubtitle,
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(
+                                builder: (_) => const HolidayDataSettingsPage()),
                           );
                         },
                       ),

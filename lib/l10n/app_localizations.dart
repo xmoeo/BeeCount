@@ -6374,6 +6374,132 @@ abstract class AppLocalizations {
   /// **'Yearly'**
   String get recurringTransactionYearly;
 
+  /// No description provided for @recurringTransactionWorkday.
+  ///
+  /// In en, this message translates to:
+  /// **'Workdays only'**
+  String get recurringTransactionWorkday;
+
+  /// No description provided for @recurringTransactionHoliday.
+  ///
+  /// In en, this message translates to:
+  /// **'Holidays only'**
+  String get recurringTransactionHoliday;
+
+  /// No description provided for @holidayDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Holiday Data Source'**
+  String get holidayDataTitle;
+
+  /// No description provided for @holidayDataSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Data for workday-only & holiday-only recurring bills'**
+  String get holidayDataSubtitle;
+
+  /// No description provided for @holidayDataPrimaryApi.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary API URL'**
+  String get holidayDataPrimaryApi;
+
+  /// No description provided for @holidayDataBackupApis.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup API list'**
+  String get holidayDataBackupApis;
+
+  /// No description provided for @holidayDataBackupApiLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup API {n}'**
+  String holidayDataBackupApiLabel(int n);
+
+  /// No description provided for @holidayDataAddBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Add backup API'**
+  String get holidayDataAddBackup;
+
+  /// No description provided for @holidayDataUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The {token} placeholder in the URL is replaced with the target year. If all sources fail, a simple weekend rule is used.'**
+  String holidayDataUrlHint(String token);
+
+  /// No description provided for @holidayDataTestConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get holidayDataTestConnection;
+
+  /// No description provided for @holidayDataTestOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Test passed, {n} entries parsed'**
+  String holidayDataTestOk(int n);
+
+  /// No description provided for @holidayDataTestFail.
+  ///
+  /// In en, this message translates to:
+  /// **'Test failed: unable to fetch or parse data'**
+  String get holidayDataTestFail;
+
+  /// No description provided for @holidayDataRestoreDefaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore defaults'**
+  String get holidayDataRestoreDefaults;
+
+  /// No description provided for @holidayDataRefreshNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh current year data'**
+  String get holidayDataRefreshNow;
+
+  /// No description provided for @holidayDataLastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated: {dt}'**
+  String holidayDataLastUpdated(String dt);
+
+  /// No description provided for @holidayDataCacheEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No cached data'**
+  String get holidayDataCacheEmpty;
+
+  /// No description provided for @holidayDataRefreshOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshed'**
+  String get holidayDataRefreshOk;
+
+  /// No description provided for @holidayDataRefreshFail.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh failed'**
+  String get holidayDataRefreshFail;
+
+  /// No description provided for @holidayDataSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get holidayDataSaved;
+
+  /// No description provided for @holidayDataInvalidUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid API URL (must be http(s) and contain {token})'**
+  String holidayDataInvalidUrl(String token);
+
+  /// No description provided for @holidayDataRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored to defaults'**
+  String get holidayDataRestored;
+
   /// No description provided for @recurringTransactionInterval.
   ///
   /// In en, this message translates to:

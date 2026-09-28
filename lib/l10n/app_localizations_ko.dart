@@ -3353,6 +3353,79 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recurringTransactionYearly => '매년';
 
   @override
+  String get recurringTransactionWorkday => '평일만';
+
+  @override
+  String get recurringTransactionHoliday => '휴일만';
+
+  @override
+  String get holidayDataTitle => '휴일 데이터 소스';
+
+  @override
+  String get holidayDataSubtitle => '평일 전용·휴일 전용 반복 기록의 판단 데이터';
+
+  @override
+  String get holidayDataPrimaryApi => '기본 API 주소';
+
+  @override
+  String get holidayDataBackupApis => '백업 API 목록';
+
+  @override
+  String holidayDataBackupApiLabel(int n) {
+    return '백업 API $n';
+  }
+
+  @override
+  String get holidayDataAddBackup => '백업 API 추가';
+
+  @override
+  String holidayDataUrlHint(String token) {
+    return 'URL의 $token 자리 표시자는 해당 연도로 대체됩니다. 모든 소스가 실패하면 단순 주말 규칙으로 판단합니다.';
+  }
+
+  @override
+  String get holidayDataTestConnection => '연결 테스트';
+
+  @override
+  String holidayDataTestOk(int n) {
+    return '테스트 성공, $n개 항목 파싱됨';
+  }
+
+  @override
+  String get holidayDataTestFail => '테스트 실패: 데이터를 가져오거나 파싱할 수 없습니다';
+
+  @override
+  String get holidayDataRestoreDefaults => '기본값 복원';
+
+  @override
+  String get holidayDataRefreshNow => '올해 데이터 새로 고침';
+
+  @override
+  String holidayDataLastUpdated(String dt) {
+    return '마지막 업데이트: $dt';
+  }
+
+  @override
+  String get holidayDataCacheEmpty => '캐시된 데이터 없음';
+
+  @override
+  String get holidayDataRefreshOk => '새로 고침 성공';
+
+  @override
+  String get holidayDataRefreshFail => '새로 고침 실패';
+
+  @override
+  String get holidayDataSaved => '저장됨';
+
+  @override
+  String holidayDataInvalidUrl(String token) {
+    return 'API 주소가 잘못되었습니다 (http(s) 링크이며 $token을 포함해야 합니다)';
+  }
+
+  @override
+  String get holidayDataRestored => '기본값으로 복원되었습니다';
+
+  @override
   String get recurringTransactionInterval => '간격';
 
   @override

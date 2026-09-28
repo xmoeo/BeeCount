@@ -3353,6 +3353,79 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recurringTransactionYearly => 'Yearly';
 
   @override
+  String get recurringTransactionWorkday => 'Workdays only';
+
+  @override
+  String get recurringTransactionHoliday => 'Holidays only';
+
+  @override
+  String get holidayDataTitle => 'Holiday Data Source';
+
+  @override
+  String get holidayDataSubtitle => 'Data for workday-only & holiday-only recurring bills';
+
+  @override
+  String get holidayDataPrimaryApi => 'Primary API URL';
+
+  @override
+  String get holidayDataBackupApis => 'Backup API list';
+
+  @override
+  String holidayDataBackupApiLabel(int n) {
+    return 'Backup API $n';
+  }
+
+  @override
+  String get holidayDataAddBackup => 'Add backup API';
+
+  @override
+  String holidayDataUrlHint(String token) {
+    return 'The $token placeholder in the URL is replaced with the target year. If all sources fail, a simple weekend rule is used.';
+  }
+
+  @override
+  String get holidayDataTestConnection => 'Test connection';
+
+  @override
+  String holidayDataTestOk(int n) {
+    return 'Test passed, $n entries parsed';
+  }
+
+  @override
+  String get holidayDataTestFail => 'Test failed: unable to fetch or parse data';
+
+  @override
+  String get holidayDataRestoreDefaults => 'Restore defaults';
+
+  @override
+  String get holidayDataRefreshNow => 'Refresh current year data';
+
+  @override
+  String holidayDataLastUpdated(String dt) {
+    return 'Last updated: $dt';
+  }
+
+  @override
+  String get holidayDataCacheEmpty => 'No cached data';
+
+  @override
+  String get holidayDataRefreshOk => 'Refreshed';
+
+  @override
+  String get holidayDataRefreshFail => 'Refresh failed';
+
+  @override
+  String get holidayDataSaved => 'Saved';
+
+  @override
+  String holidayDataInvalidUrl(String token) {
+    return 'Invalid API URL (must be http(s) and contain $token)';
+  }
+
+  @override
+  String get holidayDataRestored => 'Restored to defaults';
+
+  @override
   String get recurringTransactionInterval => 'Interval';
 
   @override
