@@ -337,6 +337,20 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
       }
     });
 
+    // MCP 记账服务:设置里启用过则应用启动即运行,供系统 AI 助手(超级小爱)
+    // 随时直连调用。失败只记日志,不影响启动。
+    Future(() async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        if (prefs.getBool('mcp_enabled') == true) {
+          final ok = await ref.read(mcpServerServiceProvider).start();
+          logger.info('Mcp', '启动时自动拉起 MCP 服务: $ok');
+        }
+      } catch (e) {
+        logger.warning('Mcp', 'MCP 服务自动启动失败: $e');
+      }
+    });
+
     // 生成待处理的周期交易
     try {
       final generatedLedgerIds = await RecurringTransactionService.generatePendingTransactionsStatic(

@@ -5,6 +5,7 @@ import '../data/db.dart';
 import '../data/repositories/local/local_repository.dart';
 import '../data/repositories/base_repository.dart';
 import '../cloud/sync/change_tracker.dart';
+import '../services/mcp/mcp_server_service.dart';
 import '../services/system/logger_service.dart';
 import '../utils/shared_ledger_picker_filter.dart';
 import 'shared_ledger_providers.dart';
@@ -205,4 +206,11 @@ final accountByIdProvider = FutureProvider.family<Account?, int>((ref, accountId
   ref.watch(syncGenerationProvider);
   final repo = ref.watch(repositoryProvider);
   return await repo.getAccount(accountId);
+});
+
+// MCP 记账服务(供系统 AI 助手直连调用;Ref 用于落库走 repositoryProvider)
+final mcpServerServiceProvider = Provider<McpServerService>((ref) {
+  final service = McpServerService(ref);
+  ref.onDispose(service.stop);
+  return service;
 });

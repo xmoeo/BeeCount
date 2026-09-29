@@ -7,8 +7,8 @@ import '../../styles/tokens.dart';
 import '../transaction/recurring_transaction_page.dart';
 import '../settings/reminder_settings_page.dart';
 import '../settings/holiday_data_settings_page.dart';
+import '../settings/mcp_settings_page.dart';
 import '../../l10n/app_localizations.dart';
-import '../../utils/ui_scale_extensions.dart';
 
 /// 自动化功能二级页面
 class AutomationPage extends ConsumerWidget {
@@ -54,6 +54,19 @@ class AutomationPage extends ConsumerWidget {
                           await Navigator.of(context).push(
                             MaterialPageRoute(
                                 builder: (_) => const HolidayDataSettingsPage()),
+                          );
+                        },
+                      ),
+                      BeeTokens.cardDivider(context),
+                      // MCP 记账服务(系统 AI 助手直连)
+                      AppListTile(
+                        leading: Icons.terminal,
+                        title: 'MCP 记账服务',
+                        subtitle: '让超级小爱等助手语音直接记账',
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(
+                                builder: (_) => const McpSettingsPage()),
                           );
                         },
                       ),
