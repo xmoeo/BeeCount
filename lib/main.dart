@@ -357,6 +357,11 @@ void _setupUrlListener(ProviderContainer container) {
         container.read(pendingNewTransactionTypeProvider.notifier).state = params.type;
         container.read(pendingNewTransactionCategoryIdProvider.notifier).state =
             params.categoryId;
+        // 参数化深链(小爱等):完整预填参数(金额/分类名/备注/时刻)
+        container.read(pendingNewTransactionParamsProvider.notifier).state =
+            params.amount > 0 || params.note != null || params.category != null
+                ? params
+                : null;
       }
       if (action == AppLinkAction.open && params != null) {
         container.read(pendingOpenPageProvider.notifier).state = params.page;

@@ -126,6 +126,41 @@ class AddTransactionParams {
       silent: params['silent'] == '1' || params['silent'] == 'true',
     );
   }
+
+  /// [AppLinkAction.newTransaction] 参数化深链(AI 助手/快捷指令)解析。
+  ///
+  /// 与 [fromQueryParams] 的区别:amount 可选(缺省打开表单但不预填金额);
+  /// 额外支持 `time`(HH:mm,与 `date` 组合成发生时刻);分类按**名称**给
+  /// (`categoryName`,如"交通"),由消费端解析成 id。
+  factory AddTransactionParams.forNewQuery(Map<String, String> params) {
+    final amount = double.tryParse(params['amount'] ?? '');
+    DateTime? date;
+    final dateStr = params['date'];
+    if (dateStr != null && dateStr.isNotEmpty) {
+      final d = DateTime.tryParse(dateStr); // YYYY-MM-DD 或完整 ISO
+      if (d != null) {
+        var hour = d.hour;
+        var minute = d.minute;
+        final timeStr = params['time'];
+        final m = timeStr == null
+            ? null
+            : RegExp(r'^(\d{1,2}):(\d{2})$').firstMatch(timeStr.trim());
+        if (m != null) {
+          hour = int.parse(m.group(1)!);
+          minute = int.parse(m.group(2)!);
+        }
+        date = DateTime(d.year, d.month, d.day, hour, minute);
+      }
+    }
+    return AddTransactionParams(
+      amount: amount ?? 0,
+      type: params['type'] ?? 'expense',
+      categoryId: int.tryParse(params['category'] ?? ''),
+      category: params['categoryName'],
+      note: params['note'],
+      date: date,
+    );
+  }
 }
 
 /// AppLink 处理结果
@@ -329,11 +364,26 @@ class AppLinkService {
         // 分类名称参数是两个不同概念，见 AddTransactionParams.categoryId 文档。
         final categoryIdStr = queryParams['category'];
         final categoryId = categoryIdStr != null ? int.tryParse(categoryIdStr) : null;
+
+        // 参数化深链(AI 助手/快捷指令):amount/note/categoryName/date 任一
+        // 出现即走"预填"路径,由消费端解析 categoryName→id;否则维持旧语义
+        // (普通「记一笔」/小组件按 id 预填,金额为 0 不预填)。
+        final hasPrefill = (queryParams['amount'] ?? '').isNotEmpty ||
+            (queryParams['note'] ?? '').isNotEmpty ||
+            (queryParams['categoryName'] ?? '').isNotEmpty ||
+            (queryParams['date'] ?? '').isNotEmpty;
+        final params = hasPrefill
+            ? AddTransactionParams.forNewQuery(queryParams)
+            : AddTransactionParams(amount: 0, type: type, categoryId: categoryId);
+
         logger.info('AppLink',
-            '打开手动记账: type=$type${categoryId != null ? ', categoryId=$categoryId' : ''}');
+            '打开手动记账: type=${params.type}${params.amount > 0 ? ', amount=${params.amount}' : ''}'
+            '${params.categoryId != null ? ', categoryId=${params.categoryId}' : ''}'
+            '${params.category != null ? ', categoryName=${params.category}' : ''}'
+            '${params.note != null ? ', note=${params.note}' : ''}');
         onNavigate?.call(
           AppLinkAction.newTransaction,
-          params: AddTransactionParams(amount: 0, type: type, categoryId: categoryId),
+          params: params,
         );
         return AppLinkResult.success(message: '打开手动记账');
 

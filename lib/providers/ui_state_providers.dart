@@ -34,6 +34,12 @@ final pendingNewTransactionTypeProvider = StateProvider<String?>((ref) => null);
 // 「快速记账」深链 beecount://new?type=...&category=<id>）
 final pendingNewTransactionCategoryIdProvider = StateProvider<int?>((ref) => null);
 
+// 参数化深链的完整预填参数（beecount://new?amount=&categoryName=&note=&date=&time=，
+// AI 助手/快捷指令用）：金额/分类名/备注/发生时刻。type/categoryId 仍走上面
+// 两个 provider（小组件路径不建此对象）。
+final pendingNewTransactionParamsProvider =
+    StateProvider<AddTransactionParams?>((ref) => null);
+
 // beecount://open?page=... 深链的待处理目标页面（assets/budget/detail），
 // 配合 AppLinkAction.open 使用
 final pendingOpenPageProvider = StateProvider<String?>((ref) => null);

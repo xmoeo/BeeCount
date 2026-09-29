@@ -14,6 +14,7 @@ import 'pages/account/accounts_page.dart';
 import 'pages/budget/budget_page.dart';
 import 'pages/main/mine_page.dart';
 import 'pages/transaction/transaction_editor_page.dart';
+import 'data/db.dart' as db;
 import 'providers.dart';
 import 'l10n/app_localizations.dart';
 import 'widget/widget_manager.dart';
@@ -140,6 +141,7 @@ class _BeeAppState extends ConsumerState<BeeApp>
             ref.read(pendingNewTransactionTypeProvider),
             categoryId: ref.read(pendingNewTransactionCategoryIdProvider),
             page: ref.read(pendingOpenPageProvider),
+            params: ref.read(pendingNewTransactionParamsProvider),
           );
           ref.read(pendingAppLinkActionProvider.notifier).state = null;
           _drainPendingDeepLink(trigger: 'listener');
@@ -400,16 +402,24 @@ class _BeeAppState extends ConsumerState<BeeApp>
     String? type;
     int? categoryId;
     String? page;
+    AddTransactionParams? newTxParams;
     if (action == AppLinkAction.newTransaction) {
-      type = ref.read(pendingNewTransactionTypeProvider) ?? 'expense';
-      categoryId = ref.read(pendingNewTransactionCategoryIdProvider);
+      // 参数化深链(小爱等)优先;小组件/普通记一笔走旧 provider
+      newTxParams = ref.read(pendingNewTransactionParamsProvider);
+      type = newTxParams?.type ??
+          ref.read(pendingNewTransactionTypeProvider) ??
+          'expense';
+      categoryId = newTxParams?.categoryId ??
+          ref.read(pendingNewTransactionCategoryIdProvider);
       ref.read(pendingNewTransactionTypeProvider.notifier).state = null;
       ref.read(pendingNewTransactionCategoryIdProvider.notifier).state = null;
+      ref.read(pendingNewTransactionParamsProvider.notifier).state = null;
     } else if (action == AppLinkAction.open) {
       page = ref.read(pendingOpenPageProvider);
       ref.read(pendingOpenPageProvider.notifier).state = null;
     }
-    _openDeepLink(action, type, categoryId: categoryId, page: page);
+    _openDeepLink(action, type,
+        categoryId: categoryId, page: page, newTxParams: newTxParams);
   }
 
   // ——— 深链「重建可恢复」打开 ———
@@ -427,6 +437,7 @@ class _BeeAppState extends ConsumerState<BeeApp>
     String? type, {
     int? categoryId,
     String? page,
+    AddTransactionParams? params,
   }) {
     SharedPreferences.getInstance().then((p) {
       p.setString(_kPendingDeepLink, jsonEncode({
@@ -434,6 +445,11 @@ class _BeeAppState extends ConsumerState<BeeApp>
         'type': type,
         if (categoryId != null) 'categoryId': categoryId,
         if (page != null) 'page': page,
+        // 参数化深链预填(小爱等):跨页面树重建存活
+        if (params != null && params.amount > 0) 'amount': params.amount,
+        if (params?.category != null) 'categoryName': params!.category,
+        if (params?.note != null) 'note': params!.note,
+        if (params?.date != null) 'date': params!.date!.toIso8601String(),
         'ts': DateTime.now().millisecondsSinceEpoch,
       }));
     }).catchError((_) {});
@@ -504,9 +520,25 @@ class _BeeAppState extends ConsumerState<BeeApp>
     final type = data['type'] as String?;
     final categoryId = (data['categoryId'] as num?)?.toInt();
     final page = data['page'] as String?;
+    // 参数化深链预填(小爱等):从持久化 JSON 还原
+    final dateStr = data['date'] as String?;
+    final newTxParams = (data['amount'] as num?) == null &&
+            data['categoryName'] == null &&
+            data['note'] == null &&
+            dateStr == null
+        ? null
+        : AddTransactionParams(
+            amount: (data['amount'] as num?)?.toDouble() ?? 0,
+            type: type ?? 'expense',
+            categoryId: categoryId,
+            category: data['categoryName'] as String?,
+            note: data['note'] as String?,
+            date: dateStr == null ? null : DateTime.tryParse(dateStr),
+          );
     logger.info('AppLink',
         'BeeApp: drain($trigger) 打开深链 $action type=$type categoryId=$categoryId page=$page');
-    _openDeepLink(action, type, categoryId: categoryId, page: page);
+    _openDeepLink(action, type,
+        categoryId: categoryId, page: page, newTxParams: newTxParams);
   }
 
   /// AppLink 动作的唯一派发出口:快捷项([_handleAppLinkAction])与
@@ -515,12 +547,13 @@ class _BeeAppState extends ConsumerState<BeeApp>
   /// [categoryId] 仅 [AppLinkAction.newTransaction] 使用(小组件「快速记账」
   /// 预填分类);[page] 仅 [AppLinkAction.open] 使用(小组件「净资产/预算/
   /// 最近交易」卡片点击落地页,见 [_openPageForDeepLink])。
-  void _openDeepLink(
+  Future<void> _openDeepLink(
     AppLinkAction action,
     String? type, {
     int? categoryId,
     String? page,
-  }) {
+    AddTransactionParams? newTxParams,
+  }) async {
     final nav = Navigator.of(context, rootNavigator: true);
     switch (action) {
       case AppLinkAction.voice:
@@ -537,12 +570,40 @@ class _BeeAppState extends ConsumerState<BeeApp>
         break;
       case AppLinkAction.newTransaction:
         // 小组件「快速记账」点分类格携带 categoryId 时,预填该分类(见
-        // TransactionEditorPage.initialCategoryId);普通「记一笔」categoryId 为 null。
+        // TransactionEditorPage.initialCategoryId);参数化深链(小爱等)给的是
+        // 分类**名称**,这里查库解析成 id(查不到就保持未分类,不臆造)。
+        var prefillCategoryId = newTxParams?.categoryId ?? categoryId;
+        final categoryName = newTxParams?.category;
+        if (categoryName != null && categoryName.isNotEmpty) {
+          try {
+            final all = await ref.read(repositoryProvider).getAllCategories();
+            final kind = (type ?? 'expense') == 'income' ? 'income' : 'expense';
+            db.Category? matched;
+            for (final c in all.where((c) => c.kind == kind)) {
+              if (c.name == categoryName) {
+                matched = c;
+                break;
+              }
+            }
+            matched ??= all
+                .where((c) => c.kind == kind && c.name.contains(categoryName))
+                .firstOrNull;
+            prefillCategoryId ??= matched?.id;
+          } catch (e) {
+            logger.warning('AppLink', '分类名解析失败: $e');
+          }
+        }
+        final prefillAmount = (newTxParams?.amount ?? 0) > 0
+            ? newTxParams!.amount
+            : null;
         nav.push(MaterialPageRoute(
           builder: (_) => TransactionEditorPage(
             initialKind: type ?? 'expense',
             quickAdd: true,
-            initialCategoryId: categoryId,
+            initialCategoryId: prefillCategoryId,
+            initialAmount: prefillAmount,
+            initialNote: newTxParams?.note,
+            initialDate: newTxParams?.date,
           ),
         ));
         break;
